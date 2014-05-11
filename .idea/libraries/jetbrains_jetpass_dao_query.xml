@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="jetbrains.jetpass.dao.query">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/jetbrains.jetpass.dao.query.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib/jetbrains.jetpass.dao.query-src.jar!/" />
+    </SOURCES>
+  </library>
+</component>

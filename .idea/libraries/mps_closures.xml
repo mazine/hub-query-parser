@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="mps-closures">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/mps-closures.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

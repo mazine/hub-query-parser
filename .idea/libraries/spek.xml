@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="spek">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/spek-core-0.1-SNAPSHOT.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib/spek-dist-0.1.121-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

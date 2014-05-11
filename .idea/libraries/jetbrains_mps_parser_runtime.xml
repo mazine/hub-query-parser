@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="jetbrains.mps.parser.runtime">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/jetbrains.mps.parser.runtime.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib/jetbrains.mps.parser.runtime-src.jar!/" />
+    </SOURCES>
+  </library>
+</component>
