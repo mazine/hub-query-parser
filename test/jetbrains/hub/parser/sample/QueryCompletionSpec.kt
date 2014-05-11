@@ -4,67 +4,90 @@ import org.spek.Spek
 import jetbrains.hub.parser.sample.context.queryContext
 import jetbrains.jetpass.dao.query.parser.QueryParser
 import jetbrains.mps.parser.runtime.base.SuggestItem
+import org.spek.givenData
+import kotlin.test.assertTrue
+import jetbrains.jetpass.dao.query.suggest.OnePositionCompletionContextTracker
+import kotlin.test.assertEquals
 
 public class QueryCompletionSpec : Spek() {{
-    given("query context and query parser") {
-        val groups = streamOf("jetbrains-team", "youtrack-developers")
-        val queryContext = queryContext {
-            field("is") {
-                value("guest")
-                value("admin")
-                value("Maxim Mazin")
-            }
-            field("group") {
-                value("All Users")
-                values(groups)
-            }
+    val queryContext = queryContext {
+        primaryField("is") {
+            value("guest")
+            value("admin")
+            value("Maxim Mazin")
+        }
 
-            tuple("access") {
-                field("space") {
-                    value("Global")
-                }
-                field("with") {
-                    value("System Admin")
-                    value("}{a(ker ;)")
-                }
+        tuple("access") {
+            field("with") {
+                value("System Admin")
+                value("}{a(ker ;)")
+            }
+            field("space") {
+                value("Global")
             }
         }
-        val queryParser = QueryParser(queryContext)
+    }
+    val queryParser = QueryParser(queryContext)
 
-        val expectations = mapOf(
-                "|" to streamOf("not |", "(|)", "\"|\"", "is: |", "access(|)", "is: admin |", "is: guest |", "is: {maxim mazin} |"),
-                " |" to streamOf("not |", "(|)", "\"|\"", "is: |", "access(|)", "is: admin |", "is: guest |", "is: {maxim mazin} |"),
-                "n|" to streamOf("not |", "n or |", "n and |"),
-                "i|" to streamOf("is: |", "i or |", "i and |"),
-                "not |" to streamOf("not (|)", "not \"|\"", "not is: |", "not access(|)", "not is: admin |", "not is: guest |", "not is: {maxim mazin} |"),
-                "not|" to streamOf("not |", "not (|)", "not \"|\"", "not is: |", "not access(|)", "not is: admin |", "not is: guest |", "not is: {maxim mazin} |"),
-                "(|)" to streamOf("(not |)", "((|))", "(\"|\")", "(is: |)", "(access(|))", "(is: admin |)", "(is: guest |)", "(is: {maxim mazin} |)"),
-                "(|" to streamOf("(not |", "((|)", "(\"|\"", "(is: |", "(access(|)", "(is: admin |", "(is: guest |", "(is: {maxim mazin} |"),
-                "(text|" to streamOf("(text or |", "(text and |"),
-                "is: |" to streamOf("is: admin|", "is: guest|", "is: {maxim mazin}|"),
-                "is: a|" to streamOf("is: admin|", "is: a or |", "is: a and |"),
-                "is: m|" to streamOf("is: {maxim mazin}|", "is: m or |", "is: m and |"),
-                "is:|" to streamOf("is: admin|", "is: guest|", "is: {maxim mazin}|"),
-                "access(|)" to streamOf("access(with: |)", "access(space: |)"),
-                "access(sp, |)" to streamOf("access(sp, with: |)", "access(sp, space: |)"),
-                "access(space: |)" to streamOf("access(space: global|)"),
-                "access(space: global|)" to streamOf("access(space: global|)", "access(space: global, |)"),
-                "is: admin|" to streamOf("is: admin|", "is: admin or |", "is: admin and |"),
-                "is: admin |" to streamOf("is: admin or |", "is: admin and |"),
-                "is: admin and |" to streamOf("is: admin and not |", "is: admin and (|)", "is: admin and \"|\"", "is: admin and is: |", "is: admin and access(|)", "is: admin and is: admin |", "is: admin and is: guest |", "is: admin and is: {maxim mazin} |"),
-                "is: admin or |" to streamOf("is: admin or not |", "is: admin or (|)", "is: admin or \"|\"", "is: admin or is: |", "is: admin or access(|)", "is: admin or is: admin |", "is: admin or is: guest |", "is: admin or is: {maxim mazin} |"),
-                "access(with: {sy|})" to streamOf("access(with: {system admin}|)"),
-                "access(with: system ad|)" to streamOf("access(with: {system admin}|)"),
-                "access(with: {system ad|})" to streamOf("access(with: {system admin}|)")
-        )
+    givenData(listOf(
+            TestData("empty", "|", streamOf("not |", "(|)", "\"|\"", "is: |", "access(|)", "is: admin |", "is: guest |", "is: {maxim mazin} |")),
+            TestData("blank", " |", streamOf("not |", "(|)", "\"|\"", "is: |", "access(|)", "is: admin |", "is: guest |", "is: {maxim mazin} |")),
+            TestData("no", "no|", streamOf("not |", "no or |", "no and |")),
+            TestData("i", "i|", streamOf("is: |", "is: admin |", "is: {maxim mazin} |", "i or |", "i and |")),
+            TestData("not with a space", "not |", streamOf("not (|)", "not \"|\"", "not is: |", "not access(|)", "not is: admin |", "not is: guest |", "not is: {maxim mazin} |")),
+            TestData("not without a space", "not|", streamOf("not |", "not (|)", "not \"|\"", "not is: |", "not access(|)", "not is: admin |", "not is: guest |", "not is: {maxim mazin} |")),
+            TestData("in parens", "(|)", streamOf("(not |)", "((|))", "(\"|\")", "(is: |)", "(access(|))", "(is: admin |)", "(is: guest |)", "(is: {maxim mazin} |)")),
+            TestData("after paren", "(|", streamOf("(not |", "((|)", "(\"|\"", "(is: |", "(access(|)", "(is: admin |", "(is: guest |", "(is: {maxim mazin} |")),
+            TestData("after text in paren", "(text|", streamOf("(text or |", "(text and |")),
+            TestData("blank field value context", "is: |", streamOf("is: admin|", "is: guest|", "is: {maxim mazin}|")),
+            TestData("after a letter in field value context", "is: ad|", streamOf("is: admin|", "is: ad or |", "is: ad and |")),
+            TestData("after a letter in field value context", "is: ma|", streamOf("is: {maxim mazin}|", "is: ma or |", "is: ma and |")),
+            TestData("empty field value context", "is:|", streamOf("is: admin|", "is: guest|", "is: {maxim mazin}|")),
+            TestData("empty tuple", "access(|)", streamOf("access(with: |)", "access(space: |)")),
+            TestData("bad tuple field", "access(sp, |)", streamOf("access(sp, with: |)", "access(sp, space: |)")),
+            TestData("blank tuple field value", "access(space: |)", streamOf("access(space: global|)")),
+            TestData("after tuple field value", "access(space: global|)", streamOf("access(space: global|)", "access(space: global, |)")),
+            TestData("after field value", "is: admin|", streamOf("is: admin|", "is: admin or |", "is: admin and |")),
+            TestData("after a space after field value", "is: admin |", streamOf("is: admin or |", "is: admin and |")),
+            TestData("after and", "is: admin and |", streamOf("is: admin and not |", "is: admin and (|)", "is: admin and \"|\"", "is: admin and is: |", "is: admin and access(|)", "is: admin and is: admin |", "is: admin and is: guest |", "is: admin and is: {maxim mazin} |")),
+            TestData("after or", "is: admin or |", streamOf("is: admin or not |", "is: admin or (|)", "is: admin or \"|\"", "is: admin or is: |", "is: admin or access(|)", "is: admin or is: admin |", "is: admin or is: guest |", "is: admin or is: {maxim mazin} |")),
+            TestData("braced field value", "access(with: {sy|})", streamOf("access(with: {system admin}|)")),
+            TestData("unbraced complex field value", "access(with: system ad|)", streamOf("access(with: {system admin}|)")),
+            TestData("braced complex field value", "access(with: {system ad|})", streamOf("access(with: {system admin}|)")))) {
 
-        for ((query, options) in expectations) {
-            on("completion of [${query}]") {
+        val (_, queryWithCaret, expectedCompletions) = it
 
+        on("completion of [${queryWithCaret}]") {
+            val (query, caret) = queryWithCaret.findCaret()
+
+            val tracker = OnePositionCompletionContextTracker(caret)
+            queryParser.setCompletionContextTracker(tracker)
+            queryParser.parse(query)
+
+            val actualCompletions = tracker.getSuggestItems(query, caret)!!.map { query.complete(it) }
+            it("should suggest ${expectedCompletions.count()} options") {
+                assertEquals(expectedCompletions.count(), actualCompletions.size, actualCompletions.makeString(", "))
+            }
+
+            val expI = expectedCompletions.iterator()
+            val actI = actualCompletions.iterator()
+            while (expI.hasNext() && actI.hasNext()) {
+                val exp = expI.next()
+                val act = actI.next()
+                it("should suggest option $exp") {
+                    assertEquals(exp, act)
+                }
             }
         }
     }
 }
+
+    private fun String.findCaret(): Pair<String, Int> {
+        val caret = this.indexOf('|')
+        assertTrue(caret >= 0, "No caret")
+        val query = this.substring(0, caret) + this.substring(caret + 1)
+        return Pair(query, caret)
+    }
 
     private fun String.complete(suggestItem: SuggestItem): String {
         val beforeReplace = this.substring(0, suggestItem.getCompletionStart())
@@ -75,4 +98,10 @@ public class QueryCompletionSpec : Spek() {{
         return completed.substring(0, suggestItem.getCaretPosition()) + "|" + completed.substring(suggestItem.getCaretPosition());
     }
 
+
+    private data class TestData(val name: String, val query: String, val options: Stream<String>) {
+        override fun toString(): String {
+            return name
+        }
+    }
 }

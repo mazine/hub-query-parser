@@ -49,9 +49,8 @@ public class QueryParserSpec : Spek() {{
             TestData("tuple with two fields", "create(name:Muzzy, with: Clocks)", "tuple/create(name:Muzzy, with:Clocks)"),
             TestData("tuple with four fields", "create(name:Muzzy, with:Clocks, and:Hat, in:Boots)", "tuple/create(name:Muzzy, with:Clocks, and:Hat, in:Boots)"),
             TestData("creepy field value", "create(name: {\\}{a(ker ;)})", "tuple/create(name:}{a(ker ;))"),
-            TestData("or fields", "is:Guest or is:Admin", "or(is:Guest, is:Admin)")
-    )) {
-        val (name, query, expected) = it
+            TestData("or fields", "is:Guest or is:Admin", "or(is:Guest, is:Admin)"))) {
+        val (_, query, expected) = it
         on("parse [$query]") {
             it("should be parsed to [$expected]") {
                 assertEquals(expected, queryParser.parseQuery(query)?.toDebugString())

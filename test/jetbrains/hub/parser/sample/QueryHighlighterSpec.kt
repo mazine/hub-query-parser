@@ -48,8 +48,7 @@ public class QueryHighlighterSpec : Spek() {{
             TestData("parens", "((is:  guest) or ( is: admin))", streamOf(fn(2, 2), fv(3, 5), op(2, 2), fn(3, 2), fv(2, 5))),
             TestData("text", "foo and bar", streamOf(tx(0, 3), op(1, 3), tx(1, 3))),
             TestData("value with escaped chars", "access(with: {\\}{a(ker ;)})", streamOf(fn(0, 6), fn(1, 4), fv(2, 13))),
-            TestData("bad tuple name", "access2(with: me)", streamOf(er(0, 7), fn(1, 4), fv(2, 2)))
-    )) {
+            TestData("bad tuple name", "access2(with: me)", streamOf(er(0, 7), fn(1, 4), fv(2, 2))))) {
         val (_, query, expected) = it
 
         on("highlight [$query]") {
