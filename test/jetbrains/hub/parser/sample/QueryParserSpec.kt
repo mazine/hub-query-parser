@@ -32,34 +32,37 @@ public class QueryParserSpec : Spek() {{
 
 
     givenData(listOf(
-            "test:test" to "test:test",
-            "test:test" to "test:test",
-            "test test2:test" to "{test test2}:test",
-            "test:test test2" to "test:{test test2}",
-            "test:test test2" to "test:{test test2",
-            "text(test)" to "test",
-            "phrase(test)" to "\"test\"",
-            "(text(test))" to "(test)",
-            "(((text(test))))" to "(((test)))",
-            "(((text(test))))" to "(((test",
-            "text(Maxim Mazin)" to "Maxim Mazin",
-            "text(Maxim A Mazin)" to "Maxim A Mazin",
-            "or(text(Maxim), text(Mazin))" to "Maxim or Mazin",
-            "name:zheka@humburg" to "name:zheka@humburg",
-            "tuple/create(name:Muzzy)" to "create(name:Muzzy)",
-            "tuple/create(name:Muzzy, with:Clocks)" to "create(name:Muzzy, with: Clocks)",
-            "tuple/create(name:Muzzy, with:Clocks, and:Hat, in:Boots)" to "create(name:Muzzy, with:Clocks, and:Hat, in:Boots)",
-            "tuple/create(name:}{a(ker ;))" to "create(name: {\\}{a(ker ;)})",
-            "or(is:Guest, is:Admin)" to "is:Guest or is:Admin"
+            TestData("field", "test:test", "test:test"),
+            TestData("complex field name", "{test test2}:test", "test test2:test"),
+            TestData("complex field value", "test:{test test2}", "test:test test2"),
+            TestData("unclosed field value", "test:{test test2", "test:test test2"),
+            TestData("text", "test", "text(test)"),
+            TestData("phrase", "\"test\"", "phrase(test)"),
+            TestData("parens", "(test)", "(text(test))"),
+            TestData("more parens", "(((test)))", "(((text(test))))"),
+            TestData("unclosed parens", "(((test", "(((text(test))))"),
+            TestData("text with spaces", "Maxim Mazin", "text(Maxim Mazin)"),
+            TestData("text with more spaces", "Maxim A Mazin", "text(Maxim A Mazin)"),
+            TestData("or", "Maxim or Mazin", "or(text(Maxim), text(Mazin))"),
+            TestData("field value with @", "name:zheka@humburg", "name:zheka@humburg"),
+            TestData("tuple", "create(name:Muzzy)", "tuple/create(name:Muzzy)"),
+            TestData("tuple with two fields", "create(name:Muzzy, with: Clocks)", "tuple/create(name:Muzzy, with:Clocks)"),
+            TestData("tuple with four fields", "create(name:Muzzy, with:Clocks, and:Hat, in:Boots)", "tuple/create(name:Muzzy, with:Clocks, and:Hat, in:Boots)"),
+            TestData("creepy field value", "create(name: {\\}{a(ker ;)})", "tuple/create(name:}{a(ker ;))"),
+            TestData("or fields", "is:Guest or is:Admin", "or(is:Guest, is:Admin)")
     )) {
-        val (expected, query) = it
-        on("parse") {
+        val (name, query, expected) = it
+        on("parse [$query]") {
             it("should be parsed to [$expected]") {
                 assertEquals(expected, queryParser.parseQuery(query)?.toDebugString())
             }
         }
     }
-
-
 }
+
+    private data class TestData(val name: String, val query: String, val expected: String) {
+        override fun toString(): String {
+            return name
+        }
+    }
 }
