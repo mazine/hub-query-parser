@@ -5,7 +5,7 @@
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/lib/spek-dist-0.1.121-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/spek-dist-0.1-SNAPSHOT-sources.jar!/" />
     </SOURCES>
   </library>
 </component>
